@@ -82,7 +82,7 @@ export default {
   },
   computed: {
     urlParams() {
-      return this.$router?.history?.current?.params || {};
+      return this.$router.history.current.params || {};
     },
   },
   async mounted() {
