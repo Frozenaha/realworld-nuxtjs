@@ -61,8 +61,8 @@ export default {
     return {
       user: {
         username: '',
-        email: 'lpzmail@163.com',
-        password: '12345678'
+        email: '',
+        password: ''
       },
       errors: {} // 错误信息
     }
@@ -80,7 +80,6 @@ export default {
             user: this.user
           })
 
-        // console.log(data)
         // TODO: 保存用户的登录状态
         this.$store.commit('setUser', data.user)
 

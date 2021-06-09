@@ -55,6 +55,13 @@
               >
                 Update Settings
               </button>
+              <button
+                type="button"
+                class="btn btn-lg btn-danger pull-xs-left"
+                @click="logout"
+              >
+                logout
+              </button>
             </fieldset>
           </form>
         </div>
@@ -64,33 +71,30 @@
 </template>
 
 <script>
-import { updateUser } from "@/api/user";
-import { mapState } from "vuex";
-
+import { updateUser, getCurrentUserInfo } from "@/api/user";
+import { mapMutations } from "vuex";
 export default {
   middleware: "authenticated",
   name: "SettingsIndex",
-  data() {
+  async asyncData() {
+    const { data: { user } = {} } = await getCurrentUserInfo();
     return {
-      user: {},
+      user,
     };
-  },
-  computed: {
-    ...mapState({ userInfo: "user" }),
   },
   methods: {
     async updateSetting() {
       try {
-        const { data } = await updateUser(this.user);
-        this.$store.commit("setUser", data.user);
-        this.$router.push(`/profile/${this.userInfo.username}`);
+        const {
+          data: { user },
+        } = await updateUser(this.user);
+        this.updateNewUser(user)
+        this.$router.push(`/profile/${user.username}`);
       } catch (e) {
         console.log(e);
       }
     },
-  },
-  mounted() {
-    this.user = JSON.parse(JSON.stringify(this.userInfo));
+    ...mapMutations(['updateNewUser','logout'])
   },
 };
 </script>

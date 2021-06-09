@@ -1,108 +1,134 @@
 <template>
   <div class="profile-page">
-
     <div class="user-info">
       <div class="container">
         <div class="row">
-
           <div class="col-xs-12 col-md-10 offset-md-1">
             <img :src="user.image" class="user-img" />
-            <h4>{{user.username}}</h4>
+            <h4>{{ user.username }}</h4>
             <p>
-              {{user.bio}}
+              {{ user.bio }}
             </p>
-             <nuxt-link to="/settings">
-             
+
+            <button
+              class="btn btn-sm btn-outline-secondary action-btn"
+              v-if="user.username !== currentUser.username"
+              @click="handleFollow"
+            >
+              <i class="ion-plus-round"></i>
+              &nbsp; {{ user.following ? "unFollow" : "follow" }}
+              {{ user.username }}
+            </button>
+            <nuxt-link to="/settings" v-else>
               <button class="btn btn-sm btn-outline-secondary action-btn">
                 <i class="ion-plus-round"></i>
-                &nbsp;
-                edit Profile Setting
+                &nbsp; edit Profile Setting
               </button>
-             </nuxt-link>
+            </nuxt-link>
           </div>
-
         </div>
       </div>
     </div>
 
     <div class="container">
       <div class="row">
-
         <div class="col-xs-12 col-md-10 offset-md-1">
           <div class="articles-toggle">
             <ul class="nav nav-pills outline-active">
-              <li class="nav-item">
-                <a class="nav-link active" href="">My Articles</a>
+              <li class="nav-item" @click="handleTab('author')">
+                <a
+                  class="nav-link"
+                  :class="{
+                    active: tab === 'author',
+                  }"
+                  >My Articles</a
+                >
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="">Favorited Articles</a>
+              <li class="nav-item" @click="handleTab('favorited')">
+                <a
+                  class="nav-link"
+                  :class="{
+                    active: tab === 'favorited',
+                  }"
+                  >Favorited Articles</a
+                >
               </li>
             </ul>
           </div>
-
-          <div class="article-preview">
-            <div class="article-meta">
-              <a href=""><img src="http://i.imgur.com/Qr71crq.jpg" /></a>
-              <div class="info">
-                <a href="" class="author">Eric Simons</a>
-                <span class="date">January 20th</span>
-              </div>
-              <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                <i class="ion-heart"></i> 29
-              </button>
-            </div>
-            <a href="" class="preview-link">
-              <h1>How to build webapps that scale</h1>
-              <p>This is the description for the post.</p>
-              <span>Read more...</span>
-            </a>
+          <div
+            class="article-preview"
+            v-for="article in articles"
+            :key="article.slug"
+          >
+            <article-item :article="article"></article-item>
           </div>
-
-          <div class="article-preview">
-            <div class="article-meta">
-              <a href=""><img src="http://i.imgur.com/N4VcUeJ.jpg" /></a>
-              <div class="info">
-                <a href="" class="author">Albert Pai</a>
-                <span class="date">January 20th</span>
-              </div>
-              <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                <i class="ion-heart"></i> 32
-              </button>
-            </div>
-            <a href="" class="preview-link">
-              <h1>The song you won't ever stop singing. No matter how hard you try.</h1>
-              <p>This is the description for the post.</p>
-              <span>Read more...</span>
-              <ul class="tag-list">
-                <li class="tag-default tag-pill tag-outline">Music</li>
-                <li class="tag-default tag-pill tag-outline">Song</li>
-              </ul>
-            </a>
-          </div>
-
-
         </div>
-
       </div>
     </div>
-
   </div>
 </template>
 
 <script>
-import {getUserInfo} from '@/api/user'
+import { getUserInfo, followUser, unFollowUser } from "@/api/user";
+import { getArticles } from "@/api/article";
+import { mapState } from "vuex";
+import ArticleItem from "../article/components/article-item";
 export default {
-  middleware: 'authenticated',
-  name: 'UserProfile',
-    async asyncData ({ params }) {
-    const { data:{profile}={} } = await getUserInfo(params.username)
+  middleware: "authenticated",
+  name: "UserProfile",
+  async asyncData({ params }) {
+    const [articleRes, userRes] = await Promise.all([
+      getArticles({
+        limit: 1000,
+        offset: 0,
+        author: params.username,
+      }),
+      getUserInfo(params.username),
+    ]);
+    const tab = "author";
+    const { articles } = articleRes.data;
+    const { profile } = userRes.data;
     return {
-      user:profile
-    }
+      user: profile,
+      articles,
+      tab,
+    };
   },
-}
+  components: {
+    ArticleItem,
+  },
+  computed: {
+    ...mapState({ currentUser: "user" }),
+  },
+  methods: {
+    async handleFollow() {
+      try {
+        this.user.following
+          ? await unFollowUser(this.user.username)
+          : await followUser(this.user.username);
+        this.user.following = !this.user.following;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async handleTab(tab) {
+      this.tab=tab
+      const param = {
+        limit: 1000,
+        offset: 0,
+        [tab]: this.user.username,
+      };
+      try {
+        const {
+          data: { articles },
+        } = await getArticles(param);
+        this.articles = articles;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+  },
+};
 </script>
 
-<style>
-
-</style>
+<style></style>

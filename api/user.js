@@ -35,12 +35,19 @@ export const getUserInfo = (username) => {
   });
 };
 
+// 当前用户信息
+export const getCurrentUserInfo = () => {
+  return request({
+    method: "GET",
+    url: `/api/user`,
+  });
+};
 
 // follow user
 export const followUser = (username) => {
   return request({
     method: "POST",
-    url: `/api/profiles/${username}follow`,
+    url: `/api/profiles/${username}/follow`,
   });
 };
 
@@ -48,6 +55,6 @@ export const followUser = (username) => {
 export const unFollowUser = (username) => {
   return request({
     method: "DELETE",
-    url: `/api/profiles/${username}follow`,
+    url: `/api/profiles/${username}/follow`,
   });
 };

@@ -86,7 +86,6 @@ export default {
     },
   },
   async mounted() {
-    console.log(this.urlParams);
     if (this.urlParams.slug) {
       try {
         const { data: { article } = {} } = await getArticle(
@@ -110,7 +109,6 @@ export default {
       const data = {
         article: articleData,
       };
-      console.log(this.urlParams.slug);
       try {
         const { data: { article } = {} } = this.urlParams.slug
           ? await updateArticle(data, this.urlParams.slug)
